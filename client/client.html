@@ -5,33 +5,101 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
-  const handleResponse = async (response) => {
-    const content = document.getElementById('content')
-    switch(response.status) {
-      case 200:
-        content.innerHTML = '<b>Success</b>';
-        break;
-      case 201:
-        content.innerHTML = '<b>Created</b>';
-        break;
-      case 204:
-        content.innerHTML = '<b>Updated (No Content)</b>';
-        break;
-      case 400:
-        content.innerHTML = '<b>Bad Request</b>';
-        break;
-      case 404:
-        content.innerHTML = '<b>Not Found</b>';
-        break;
-      default:
-        content.innerHTML = '<p>Status code not implemented by client</p>';
-        break;
-    }
-  };
 
-  const sendPost = () => {
+  //updates content from response, parseResponse gets object and adds to content
+    const handleResponse = async(response, parseResponse) => {
 
-  }
+      const content = document.querySelector('#content');
+
+      switch(response.status) {
+        case 200:
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 201:
+          content.innerHTML = `<b>Created</b>`;
+          break;
+        case 204:
+          content.innerHTML = `<b>Updated (No Content)</b>`;
+          break;
+        case 400:
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 404:
+          content.innerHTML = `<b>Not Found</b>`;
+          break;
+        default:
+          content.innerHTML = `Error code not implemented by client.`;
+          break;
+      }
+
+    if (parseResponse){
+        let obj = await response.json();
+        let jsonString = JSON.stringify(obj.users);
+        let jsonMessage = JSON.stringify(obj.message);
+        
+        content.innerHTML += 
+        `<p>${JSON.stringify(jsonString) || 'Message: ' + 
+        JSON.stringify(jsonMessage)}</p>`;
+      }   
+    };
+
+    const sendGet = async(userForm) => {
+      const method = document.querySelector('#methodSelect').value;
+      const url = document.querySelector('#urlField').value;
+
+      let response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      handleResponse(response, method === 'get');
+    };
+
+    const sendPost = async (nameForm) => {
+      const nameMethod = nameForm.getAttribute('method');
+      const nameAction = nameForm.getAttribute('action');
+      const nameField = nameForm.querySelector('#nameField');
+      const ageField = nameForm.querySelector('#ageField');
+      const formData = `name=${nameField.value}&age=${ageField.value}`;
+
+      let response = await fetch(nameAction, {
+        method: nameMethod,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      handleResponse(response);
+      handleResponse(response, nameMethod === 'post');
+    };
+
+    const init = () => {
+      const userForm = document.querySelector('#userForm');
+      const nameForm = document.querySelector('#nameForm');
+
+      const getUsers = (e) => {
+        e.preventDefault();
+        sendGet(userForm);
+        return false;
+      }
+
+      const addUser = (e) => {
+        e.preventDefault();
+        sendPost(nameForm);
+        return false;
+      }
+
+      userForm.addEventListener('submit', getUsers);
+      nameForm.addEventListener('submit', addUser);
+    };
+
+    window.onload = init;
+    
   </script>
 </head>
 <body>
